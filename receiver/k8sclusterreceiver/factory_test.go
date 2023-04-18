@@ -40,14 +40,16 @@ func TestFactory(t *testing.T) {
 	rCfg, ok := cfg.(*Config)
 	require.True(t, ok)
 
-	require.Equal(t, &Config{
-		Distribution:               distributionKubernetes,
-		CollectionInterval:         10 * time.Second,
-		NodeConditionTypesToReport: defaultNodeConditionsToReport,
-		APIConfig: k8sconfig.APIConfig{
-			AuthType: k8sconfig.AuthTypeServiceAccount,
-		},
-	}, rCfg)
+	require.Equal(
+		t, &Config{
+			Distribution:               distributionKubernetes,
+			CollectionInterval:         10 * time.Second,
+			NodeConditionTypesToReport: defaultNodeConditionsToReport,
+			APIConfig: k8sconfig.APIConfig{
+				AuthType: k8sconfig.AuthTypeServiceAccount,
+			},
+		}, rCfg,
+	)
 
 	r, err := f.CreateTracesReceiver(
 		context.Background(), receivertest.NewNopCreateSettings(),
@@ -91,7 +93,7 @@ func TestFactoryDistributions(t *testing.T) {
 }
 
 func newTestReceiver(t *testing.T, cfg *Config) *kubernetesReceiver {
-	r, err := newReceiver(context.Background(), receivertest.NewNopCreateSettings(), cfg, consumertest.NewNop())
+	r, err := newMetricReceiver(context.Background(), receivertest.NewNopCreateSettings(), cfg, consumertest.NewNop())
 	require.NoError(t, err)
 	require.NotNil(t, r)
 	rcvr, ok := r.(*kubernetesReceiver)

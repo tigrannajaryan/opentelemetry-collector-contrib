@@ -7,6 +7,7 @@ require (
 	github.com/iancoleman/strcase v0.2.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/common v0.75.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/k8sconfig v0.75.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/sharedcomponent v0.75.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/experimentalmetricmetadata v0.75.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/opencensus v0.75.0
 	github.com/openshift/api v3.9.0+incompatible
@@ -109,6 +110,8 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/pkg/experiment
 replace github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/opencensus => ../../pkg/translator/opencensus
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal => ../../internal/coreinternal
+
+replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/sharedcomponent => ../../internal/sharedcomponent
 
 retract v0.65.0
 

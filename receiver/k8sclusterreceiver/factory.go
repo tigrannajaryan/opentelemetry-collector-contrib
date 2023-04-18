@@ -53,8 +53,11 @@ func createDefaultConfig() component.Config {
 
 // NewFactory creates a factory for k8s_cluster receiver.
 func NewFactory() receiver.Factory {
+
 	return receiver.NewFactory(
 		typeStr,
 		createDefaultConfig,
-		receiver.WithMetrics(newReceiver, stability))
+		receiver.WithMetrics(newMetricReceiver, stability),
+		receiver.WithLogs(newEntityLogReceiver, stability),
+	)
 }

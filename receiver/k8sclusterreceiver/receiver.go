@@ -23,6 +23,8 @@ import (
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/obsreport"
 	"go.opentelemetry.io/collector/receiver"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/sharedcomponent"
 )
 
 const (
@@ -36,11 +38,12 @@ var _ receiver.Metrics = (*kubernetesReceiver)(nil)
 type kubernetesReceiver struct {
 	resourceWatcher *resourceWatcher
 
-	config   *Config
-	settings receiver.CreateSettings
-	consumer consumer.Metrics
-	cancel   context.CancelFunc
-	obsrecv  *obsreport.Receiver
+	config            *Config
+	settings          receiver.CreateSettings
+	metricConsumer    consumer.Metrics
+	entityLogConsumer consumer.Logs
+	cancel            context.CancelFunc
+	obsrecv           *obsreport.Receiver
 }
 
 func (kr *kubernetesReceiver) Start(ctx context.Context, host component.Host) error {
@@ -52,9 +55,12 @@ func (kr *kubernetesReceiver) Start(ctx context.Context, host component.Host) er
 
 	exporters := host.GetExporters()
 	if err := kr.resourceWatcher.setupMetadataExporters(
-		exporters[component.DataTypeMetrics], kr.config.MetadataExporters); err != nil {
+		exporters[component.DataTypeMetrics], kr.config.MetadataExporters,
+	); err != nil {
 		return err
 	}
+
+	kr.resourceWatcher.entityLogConsumer = kr.entityLogConsumer
 
 	go func() {
 		kr.settings.Logger.Info("Starting shared informers and wait for initial cache sync.")
@@ -112,19 +118,26 @@ func (kr *kubernetesReceiver) dispatchMetrics(ctx context.Context) {
 	c := kr.obsrecv.StartMetricsOp(ctx)
 
 	numPoints := mds.DataPointCount()
-	err := kr.consumer.ConsumeMetrics(c, mds)
+	err := kr.metricConsumer.ConsumeMetrics(c, mds)
 	kr.obsrecv.EndMetricsOp(c, typeStr, numPoints, err)
 }
 
-// newReceiver creates the Kubernetes cluster receiver with the given configuration.
-func newReceiver(_ context.Context, set receiver.CreateSettings, cfg component.Config, consumer consumer.Metrics) (receiver.Metrics, error) {
-	rCfg := cfg.(*Config)
+// This is the map of already created OTLP receivers for particular configurations.
+// We maintain this map because the Factory is asked trace and metric receivers separately
+// when it gets CreateTracesReceiver() and CreateMetricsReceiver() but they must not
+// create separate objects, they must use one otlpReceiver object per configuration.
+// When the receiver is shutdown it should be removed from this map so the same configuration
+// can be recreated successfully.
+var receivers = sharedcomponent.NewSharedComponents()
 
-	obsrecv, err := obsreport.NewReceiver(obsreport.ReceiverSettings{
-		ReceiverID:             set.ID,
-		Transport:              transport,
-		ReceiverCreateSettings: set,
-	})
+func newKubernetesReceiver(rCfg *Config, set receiver.CreateSettings) (*kubernetesReceiver, error) {
+	obsrecv, err := obsreport.NewReceiver(
+		obsreport.ReceiverSettings{
+			ReceiverID:             set.ID,
+			Transport:              transport,
+			ReceiverCreateSettings: set,
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +145,47 @@ func newReceiver(_ context.Context, set receiver.CreateSettings, cfg component.C
 		resourceWatcher: newResourceWatcher(set.Logger, rCfg),
 		settings:        set,
 		config:          rCfg,
-		consumer:        consumer,
 		obsrecv:         obsrecv,
 	}, nil
+}
+
+// newMetricReceiver creates the Kubernetes cluster receiver with the given configuration.
+func newMetricReceiver(
+	_ context.Context, set receiver.CreateSettings, cfg component.Config, consumer consumer.Metrics,
+) (receiver.Metrics, error) {
+	oCfg := cfg.(*Config)
+	var err error
+	var rcv *kubernetesReceiver
+	receivers.GetOrAdd(
+		oCfg, func() component.Component {
+			rcv, err = newKubernetesReceiver(oCfg, set)
+			return rcv
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	rcv.metricConsumer = consumer
+	return rcv, nil
+}
+
+func newEntityLogReceiver(
+	_ context.Context, set receiver.CreateSettings, cfg component.Config, consumer consumer.Logs,
+) (receiver.Logs, error) {
+	oCfg := cfg.(*Config)
+	var err error
+	var rcv *kubernetesReceiver
+	receivers.GetOrAdd(
+		oCfg, func() component.Component {
+			rcv, err = newKubernetesReceiver(oCfg, set)
+			return rcv
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	rcv.entityLogConsumer = consumer
+	return rcv, nil
 }

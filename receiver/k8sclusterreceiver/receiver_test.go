@@ -67,11 +67,13 @@ func TestReceiver(t *testing.T) {
 	// struct corresponds to one resource.
 	expectedNumMetrics := numPods + numNodes + numClusterQuotaMetrics
 	var initialDataPointCount int
-	require.Eventually(t, func() bool {
-		initialDataPointCount = sink.DataPointCount()
-		return initialDataPointCount == expectedNumMetrics
-	}, 10*time.Second, 100*time.Millisecond,
-		"metrics not collected")
+	require.Eventually(
+		t, func() bool {
+			initialDataPointCount = sink.DataPointCount()
+			return initialDataPointCount == expectedNumMetrics
+		}, 10*time.Second, 100*time.Millisecond,
+		"metrics not collected",
+	)
 
 	numPodsToDelete := 1
 	deletePods(t, client, numPodsToDelete)
@@ -79,11 +81,13 @@ func TestReceiver(t *testing.T) {
 	// Expects metric data from a node, since other resources were deleted.
 	expectedNumMetrics = (numPods - numPodsToDelete) + numNodes + numClusterQuotaMetrics
 	var metricsCountDelta int
-	require.Eventually(t, func() bool {
-		metricsCountDelta = sink.DataPointCount() - initialDataPointCount
-		return metricsCountDelta == expectedNumMetrics
-	}, 10*time.Second, 100*time.Millisecond,
-		"updated metrics not collected")
+	require.Eventually(
+		t, func() bool {
+			metricsCountDelta = sink.DataPointCount() - initialDataPointCount
+			return metricsCountDelta == expectedNumMetrics
+		}, 10*time.Second, 100*time.Millisecond,
+		"updated metrics not collected",
+	)
 
 	require.NoError(t, r.Shutdown(ctx))
 }
@@ -103,9 +107,11 @@ func TestReceiverTimesOutAfterStartup(t *testing.T) {
 
 	ctx := context.Background()
 	require.NoError(t, r.Start(ctx, componenttest.NewNopHost()))
-	require.Eventually(t, func() bool {
-		return r.resourceWatcher.initialSyncTimedOut.Load()
-	}, 10*time.Second, 100*time.Millisecond)
+	require.Eventually(
+		t, func() bool {
+			return r.resourceWatcher.initialSyncTimedOut.Load()
+		}, 10*time.Second, 100*time.Millisecond,
+	)
 	require.NoError(t, r.Shutdown(ctx))
 }
 
@@ -131,11 +137,13 @@ func TestReceiverWithManyResources(t *testing.T) {
 	ctx := context.Background()
 	require.NoError(t, r.Start(ctx, componenttest.NewNopHost()))
 
-	require.Eventually(t, func() bool {
-		// 4 points from the cluster quota.
-		return sink.DataPointCount() == numExpectedMetrics
-	}, 10*time.Second, 100*time.Millisecond,
-		"metrics not collected")
+	require.Eventually(
+		t, func() bool {
+			// 4 points from the cluster quota.
+			return sink.DataPointCount() == numExpectedMetrics
+		}, 10*time.Second, 100*time.Millisecond,
+		"metrics not collected",
+	)
 
 	require.NoError(t, r.Shutdown(ctx))
 }
@@ -180,10 +188,12 @@ func TestReceiverWithMetadata(t *testing.T) {
 
 	// Ensure ConsumeKubernetesMetadata is called twice, once for the add and
 	// then for the update.
-	require.Eventually(t, func() bool {
-		return int(numCalls.Load()) == 2
-	}, 10*time.Second, 100*time.Millisecond,
-		"metadata not collected")
+	require.Eventually(
+		t, func() bool {
+			return int(numCalls.Load()) == 2
+		}, 10*time.Second, 100*time.Millisecond,
+		"metadata not collected",
+	)
 
 	require.NoError(t, r.Shutdown(ctx))
 }
@@ -206,7 +216,8 @@ func setupReceiver(
 	osQuotaClient quotaclientset.Interface,
 	consumer consumer.Metrics,
 	initialSyncTimeout time.Duration,
-	tt obsreporttest.TestTelemetry) *kubernetesReceiver {
+	tt obsreporttest.TestTelemetry,
+) *kubernetesReceiver {
 
 	distribution := distributionKubernetes
 	if osQuotaClient != nil {
@@ -220,7 +231,7 @@ func setupReceiver(
 		Distribution:               distribution,
 	}
 
-	r, _ := newReceiver(context.Background(), tt.ToReceiverCreateSettings(), config, consumer)
+	r, _ := newMetricReceiver(context.Background(), tt.ToReceiverCreateSettings(), config, consumer)
 	kr := r.(*kubernetesReceiver)
 	kr.resourceWatcher.makeClient = func(_ k8sconfig.APIConfig) (kubernetes.Interface, error) {
 		return client, nil
