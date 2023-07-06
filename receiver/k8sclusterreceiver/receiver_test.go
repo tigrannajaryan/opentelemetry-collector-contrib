@@ -210,7 +210,7 @@ func setupReceiver(
 		Distribution:               distribution,
 	}
 
-	r, _ := newReceiver(context.Background(), tt.ToReceiverCreateSettings(), config, consumer)
+	r, _ := newMetricsReceiver(context.Background(), tt.ToReceiverCreateSettings(), config, consumer)
 	kr := r.(*kubernetesReceiver)
 	kr.resourceWatcher.makeClient = func(_ k8sconfig.APIConfig) (kubernetes.Interface, error) {
 		return client, nil

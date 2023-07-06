@@ -47,6 +47,13 @@ var defaultExcludeMetrics = func() []dpfilters.MetricFilter {
 
 var _ confmap.Unmarshaler = (*Config)(nil)
 
+type MetadataSourceType string
+
+const (
+	MetadataSourceMetadataUpdates = "metadata_updates"
+	MetadataSourceEntityEvents    = "entity_events"
+)
+
 // Config defines configuration for SignalFx exporter.
 type Config struct {
 	exporterhelper.QueueSettings  `mapstructure:"sending_queue"`
@@ -98,6 +105,10 @@ type Config struct {
 	// DeltaTranslationTTL specifies in seconds the max duration to keep the most recent datapoint for any
 	// `delta_metric` specified in TranslationRules. Default is 3600s.
 	DeltaTranslationTTL int64 `mapstructure:"delta_translation_ttl"`
+
+	// MetadataSource selects the source for metadata. Valid values are "metadata_updates"
+	// and "entity_events". If unspecified defaults to "metadata_updates".
+	MetadataSource MetadataSourceType `mapstructure:"metadata_source"`
 
 	// SyncHostMetadata defines if the exporter should scrape host metadata and
 	// sends it as property updates to SignalFx backend.
@@ -224,6 +235,12 @@ func (cfg *Config) Validate() error {
 
 	if cfg.MaxConnections < 0 {
 		return errors.New(`cannot have a negative "max_connections"`)
+	}
+
+	switch cfg.MetadataSource {
+	case "", MetadataSourceMetadataUpdates, MetadataSourceEntityEvents:
+	default:
+		return fmt.Errorf(`unsupported "metadata_source" %s`, cfg.MetadataSource)
 	}
 
 	return nil

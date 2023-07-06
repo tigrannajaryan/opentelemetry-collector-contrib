@@ -6,6 +6,7 @@ package k8sclusterreceiver // import "github.com/open-telemetry/opentelemetry-co
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"sync/atomic"
 	"time"
@@ -13,6 +14,8 @@ import (
 	quotaclientset "github.com/openshift/client-go/quota/clientset/versioned"
 	quotainformersv1 "github.com/openshift/client-go/quota/informers/externalversions"
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/consumer"
+	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/receiver"
 	"go.uber.org/zap"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -45,6 +48,8 @@ type resourceWatcher struct {
 	initialSyncDone     *atomic.Bool
 	initialSyncTimedOut *atomic.Bool
 	config              *Config
+
+	entityConsumer consumer.Logs
 
 	// For mocking.
 	makeClient               func(apiConf k8sconfig.APIConfig) (kubernetes.Interface, error)
@@ -237,9 +242,9 @@ func (rw *resourceWatcher) onAdd(obj interface{}) {
 	rw.dataCollector.SyncMetrics(obj)
 
 	// Sync metadata only if there's at least one destination for it to sent.
-	if len(rw.metadataConsumers) == 0 {
-		return
-	}
+	//if len(rw.metadataConsumers) == 0 {
+	//	return
+	//}
 
 	newMetadata := rw.dataCollector.SyncMetadata(obj)
 	rw.syncMetadataUpdate(map[experimentalmetricmetadata.ResourceID]*metadata.KubernetesMetadata{}, newMetadata)
@@ -256,9 +261,9 @@ func (rw *resourceWatcher) onUpdate(oldObj, newObj interface{}) {
 	rw.dataCollector.SyncMetrics(newObj)
 
 	// Sync metadata only if there's at least one destination for it to sent.
-	if len(rw.metadataConsumers) == 0 {
-		return
-	}
+	//if len(rw.metadataConsumers) == 0 {
+	//	return
+	//}
 
 	oldMetadata := rw.dataCollector.SyncMetadata(oldObj)
 	newMetadata := rw.dataCollector.SyncMetadata(newObj)
@@ -325,12 +330,54 @@ func validateMetadataExporters(metadataExporters map[string]bool, exporters map[
 }
 
 func (rw *resourceWatcher) syncMetadataUpdate(oldMetadata, newMetadata map[experimentalmetricmetadata.ResourceID]*metadata.KubernetesMetadata) {
+	//for k, v := range newMetadata {
+	//	rw.logger.Info(
+	//		"newMetadata",
+	//		zap.String("Key", string(k)),
+	//		zap.String("ResourceIDKey", v.ResourceIDKey),
+	//		zap.String("ResourceID", string(v.ResourceID)),
+	//		zap.Any("Metadata", v.Metadata),
+	//	)
+	//}
+
 	metadataUpdate := metadata.GetMetadataUpdate(oldMetadata, newMetadata)
-	if len(metadataUpdate) == 0 {
-		return
+	if len(metadataUpdate) != 0 {
+		for _, consume := range rw.metadataConsumers {
+			_ = consume(metadataUpdate)
+		}
 	}
 
-	for _, consume := range rw.metadataConsumers {
-		_ = consume(metadataUpdate)
+	//for _, m := range metadataUpdate {
+	//	rw.logger.Info(
+	//		"metadataUpdate",
+	//		zap.String("ResourceIDKey", m.ResourceIDKey),
+	//		zap.String("ResourceID", string(m.ResourceID)),
+	//		zap.Any("MetadataToUpdate", m.MetadataToUpdate),
+	//		zap.Any("MetadataToAdd", m.MetadataToAdd),
+	//		zap.Any("MetadataToRemove", m.MetadataToRemove),
+	//	)
+	//}
+
+	if rw.entityConsumer != nil {
+		//rw.logger.Info("Metatada", zap.Int("old", len(oldMetadata)), zap.Int("new", len(newMetadata)))
+		entityEvents := metadata.GetEntityEvents(oldMetadata, newMetadata)
+
+		logs := entityEvents.ToLog()
+
+		if logs.LogRecordCount() != 0 {
+			m := plog.JSONMarshaler{}
+			js, err := m.MarshalLogs(logs)
+			f, err := os.OpenFile("k8s.entities.jsonl", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0777)
+			if err != nil {
+				return
+			}
+			_, err = f.Write(js)
+			_, err = f.Write([]byte("\n"))
+			if err1 := f.Close(); err1 != nil && err == nil {
+				err = err1
+			}
+
+			rw.entityConsumer.ConsumeLogs(context.Background(), logs)
+		}
 	}
 }

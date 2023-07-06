@@ -56,6 +56,7 @@ type signalfxExporter struct {
 	telemetrySettings  component.TelemetrySettings
 	pushMetricsData    func(ctx context.Context, md pmetric.Metrics) (droppedTimeSeries int, err error)
 	pushLogsData       func(ctx context.Context, ld plog.Logs) (droppedLogRecords int, err error)
+	eventClient        *sfxEventClient
 	hostMetadataSyncer *hostmetadata.Syncer
 	converter          *translation.MetricsConverter
 	dimClient          *dimensions.DimensionClient
@@ -179,7 +180,6 @@ func newEventExporter(config *Config, createSettings exporter.CreateSettings) (*
 		logger:            createSettings.Logger,
 		telemetrySettings: createSettings.TelemetrySettings,
 	}, nil
-
 }
 
 func (se *signalfxExporter) startLogs(_ context.Context, host component.Host) error {
@@ -194,7 +194,7 @@ func (se *signalfxExporter) startLogs(_ context.Context, host component.Host) er
 		return err
 	}
 
-	eventClient := &sfxEventClient{
+	se.eventClient = &sfxEventClient{
 		sfxClientBase: sfxClientBase{
 			ingestURL: ingestURL,
 			headers:   headers,
@@ -205,8 +205,33 @@ func (se *signalfxExporter) startLogs(_ context.Context, host component.Host) er
 		accessTokenPassthrough: se.config.AccessTokenPassthrough,
 	}
 
-	se.pushLogsData = eventClient.pushLogsData
+	se.pushLogsData = se.consumeLogs
 	return nil
+}
+
+func (se *signalfxExporter) consumeLogs(ctx context.Context, ld plog.Logs) (droppedLogRecords int, err error) {
+	rls := ld.ResourceLogs()
+	if rls.Len() == 0 {
+		return 0, nil
+	}
+
+	// Note that his mutates ld, so the log consumer must be declared with mutation capability.
+	entityEventLogs := metadata.ExtractEntityEventsFromLogs(ld)
+
+	if se.config.MetadataSource == MetadataSourceEntityEvents {
+		if se.dimClient != nil {
+			entityEvents := metadata.EntityEventsFromLogs(entityEventLogs)
+			if err := se.dimClient.PushEntityEvents(entityEvents); err != nil {
+				se.logger.Error("error sending entity events", zap.Error(err))
+			}
+		} else {
+			droppedLogRecords = entityEventLogs.LogRecordCount()
+		}
+	}
+
+	// Send events
+	dr, err := se.eventClient.pushLogsData(ctx, ld)
+	return dr + droppedLogRecords, err
 }
 
 func (se *signalfxExporter) createClient(host component.Host) (*http.Client, error) {

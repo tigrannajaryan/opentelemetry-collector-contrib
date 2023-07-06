@@ -11,6 +11,7 @@ import (
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config/confighttp"
+	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/exporter"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 	"go.uber.org/zap"
@@ -167,7 +168,10 @@ func createLogsExporter(
 		exporterhelper.WithTimeout(exporterhelper.TimeoutSettings{Timeout: 0}),
 		exporterhelper.WithRetry(expCfg.RetrySettings),
 		exporterhelper.WithQueue(expCfg.QueueSettings),
-		exporterhelper.WithStart(exp.startLogs))
+		exporterhelper.WithStart(exp.startLogs),
+		// Log exporter mutates data in signalfxExporter.consumeLogs()
+		exporterhelper.WithCapabilities(consumer.Capabilities{MutatesData: true}),
+	)
 
 	if err != nil {
 		return nil, err
