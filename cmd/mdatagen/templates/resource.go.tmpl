@@ -4,7 +4,9 @@ package {{ .Package }}
 
 import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	{{- if .Entity.Type }}
 	"go.opentelemetry.io/collector/pdata/pentity"
+	{{- end }}
 )
 
 // ResourceBuilder is a helper struct to build resources predefined in metadata.yaml.
@@ -12,22 +14,31 @@ import (
 type ResourceBuilder struct {
 	config ResourceAttributesConfig
 	res	pcommon.Resource
+	{{- if .Entity.Type }}
 	ent pentity.EntityEvent
+	{{- end }}
 }
 
 // NewResourceBuilder creates a new ResourceBuilder. This method should be called on the start of the application.
 func NewResourceBuilder(rac ResourceAttributesConfig) *ResourceBuilder {
+    res := pcommon.NewResource()
+    {{- if .Entity.Type }}
     ent := pentity.NewEntityEvent()
 
-    {{- if .Entity.Type }}
+    // Set the producing entity type in the Resource.
+    res.SetEntityType("{{ .Entity.Type }}")
+
+    // Prepare an EntityState event.
     ent.SetEmptyEntityState()
     ent.SetEntityType("{{ .Entity.Type }}")
     {{- end }}
 
 	return &ResourceBuilder{
 		config: rac,
-		res: pcommon.NewResource(),
+		res: res,
+		{{- if .Entity.Type }}
 		ent: ent,
+		{{- end }}
 	}
 }
 
@@ -39,6 +50,7 @@ func (rb *ResourceBuilder) Set{{ $name.Render }}{{ . | publicVar }}() {
 		rb.res.Attributes().PutStr("{{ $name }}", "{{ . }}")
         {{- if $.Entity.Type }}
 		{{- if eq $attr.EntityIdentifying true }}
+        rb.res.EntityId().PutStr("{{ $name }}", "{{ . }}")
         rb.ent.Id().PutStr("{{ $name }}", "{{ . }}")
         {{- else }}
         rb.ent.EntityState().Attributes().PutStr("{{ $name }}", "{{ . }}")
@@ -59,8 +71,10 @@ func (rb *ResourceBuilder) Set{{ $name.Render }}(val {{ $attr.Type.Primitive }})
 		{{- if eq $attr.EntityIdentifying true }}
 		// This is an identifying attribute of the entity.
 		{{- if or (eq $attr.Type.String "Bytes") (eq $attr.Type.String "Slice") (eq $attr.Type.String "Map") }}
+		rb.res.EntityId().PutEmpty{{ $attr.Type }}("{{ $name }}").FromRaw(val)
 		rb.ent.Id().PutEmpty{{ $attr.Type }}("{{ $name }}").FromRaw(val)
 		{{- else }}
+		rb.res.EntityId().Put{{ $attr.Type }}("{{ $name }}", val)
 		rb.ent.Id().Put{{ $attr.Type }}("{{ $name }}", val)
 		{{- end }}
         {{- else }}
