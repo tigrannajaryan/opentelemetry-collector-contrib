@@ -18,8 +18,11 @@ type ResourceBuilder struct {
 // NewResourceBuilder creates a new ResourceBuilder. This method should be called on the start of the application.
 func NewResourceBuilder(rac ResourceAttributesConfig) *ResourceBuilder {
     ent := pentity.NewEntityEvent()
+
+    {{- if .Entity.Type }}
     ent.SetEmptyEntityState()
     ent.SetEntityType("{{ .Entity.Type }}")
+    {{- end }}
 
 	return &ResourceBuilder{
 		config: rac,
@@ -34,8 +37,12 @@ func NewResourceBuilder(rac ResourceAttributesConfig) *ResourceBuilder {
 func (rb *ResourceBuilder) Set{{ $name.Render }}{{ . | publicVar }}() {
 	if rb.config.{{ $name.Render }}.Enabled {
 		rb.res.Attributes().PutStr("{{ $name }}", "{{ . }}")
+        {{- if $.Entity.Type }}
 		{{- if eq $attr.EntityIdentifying true }}
         rb.ent.Id().PutStr("{{ $name }}", "{{ . }}")
+        {{- else }}
+        rb.ent.EntityState().Attributes().PutStr("{{ $name }}", "{{ . }}")
+        {{- end }}
         {{- end }}
 	}
 }
@@ -48,12 +55,22 @@ func (rb *ResourceBuilder) Set{{ $name.Render }}(val {{ $attr.Type.Primitive }})
 		{{- else }}
 		rb.res.Attributes().Put{{ $attr.Type }}("{{ $name }}", val)
 		{{- end }}
+        {{- if $.Entity.Type }}
 		{{- if eq $attr.EntityIdentifying true }}
+		// This is an identifying attribute of the entity.
 		{{- if or (eq $attr.Type.String "Bytes") (eq $attr.Type.String "Slice") (eq $attr.Type.String "Map") }}
 		rb.ent.Id().PutEmpty{{ $attr.Type }}("{{ $name }}").FromRaw(val)
 		{{- else }}
 		rb.ent.Id().Put{{ $attr.Type }}("{{ $name }}", val)
 		{{- end }}
+        {{- else }}
+		// This is a non-identifying attribute of the entity.
+		{{- if or (eq $attr.Type.String "Bytes") (eq $attr.Type.String "Slice") (eq $attr.Type.String "Map") }}
+		rb.ent.EntityState().Attributes().PutEmpty{{ $attr.Type }}("{{ $name }}").FromRaw(val)
+		{{- else }}
+		rb.ent.EntityState().Attributes().Put{{ $attr.Type }}("{{ $name }}", val)
+		{{- end }}
+        {{- end }}
         {{- end }}
 	}
 }
