@@ -15,11 +15,9 @@ type ResourceBuilder struct {
 
 // NewResourceBuilder creates a new ResourceBuilder. This method should be called on the start of the application.
 func NewResourceBuilder(rac ResourceAttributesConfig) *ResourceBuilder {
-	res := pcommon.NewResource()
-
 	return &ResourceBuilder{
 		config: rac,
-		res:    res,
+		res:    pcommon.NewResource(),
 	}
 }
 

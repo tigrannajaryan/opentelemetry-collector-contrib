@@ -26,7 +26,6 @@ func NewResourceBuilder(rac ResourceAttributesConfig) *ResourceBuilder {
 	// Prepare an EntityState event.
 	ent.SetEmptyEntityState()
 	ent.SetEntityType("process")
-
 	return &ResourceBuilder{
 		config: rac,
 		res:    res,
