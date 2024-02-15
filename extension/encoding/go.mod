@@ -37,3 +37,5 @@ require (
 	google.golang.org/grpc v1.61.0 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 )
+
+replace go.opentelemetry.io/collector => /Users/tnajaryan/work/repos/opentelemetry-collector

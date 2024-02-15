@@ -73,8 +73,8 @@ github.com/knadh/koanf/maps v0.1.1 h1:G5TjmUh2D7G2YWf5SQQqSiHRJEjaicvU0KpypqB3NI
 github.com/knadh/koanf/maps v0.1.1/go.mod h1:npD/QZY3V6ghQDdcQzl1W4ICNVTkohC8E73eI2xW4yI=
 github.com/knadh/koanf/providers/confmap v0.1.0 h1:gOkxhHkemwG4LezxxN8DMOFopOPghxRVp7JbIvdvqzU=
 github.com/knadh/koanf/providers/confmap v0.1.0/go.mod h1:2uLhxQzJnyHKfxG927awZC7+fyHFdQkd697K4MdLnIU=
-github.com/knadh/koanf/v2 v2.0.2 h1:sEZzPW2rVWSahcYILNq/syJdEyRafZIG0l9aWwL86HA=
-github.com/knadh/koanf/v2 v2.0.2/go.mod h1:HN9uZ+qFAejH1e4G41gnoffIanINWQuONLXiV7kir6k=
+github.com/knadh/koanf/v2 v2.1.0 h1:eh4QmHHBuU8BybfIJ8mB8K8gsGCD/AUQTdwGq/GzId8=
+github.com/knadh/koanf/v2 v2.1.0/go.mod h1:4mnTRbZCK+ALuBXHZMjDfG9y714L7TykVnZkXbMU3Es=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
@@ -126,8 +126,6 @@ github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcU
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
-go.opentelemetry.io/collector v0.94.1 h1:bGHW5NKmh34oMflMEyNCHpes6vtiQNXpgea4GiscAOs=
-go.opentelemetry.io/collector v0.94.1/go.mod h1:5ACZXRo6O23gBkRrHSxYs1sLaP4pZ8w+flZNE7pvoNg=
 go.opentelemetry.io/collector/component v0.94.1 h1:j4peKsWb+QVBKPs2RJeIj5EoQW7yp2ZVGrd8Bu9HU9M=
 go.opentelemetry.io/collector/component v0.94.1/go.mod h1:vg+kAH81C3YS0SPzUXkSFWLPC1WH7zx70dAtUWWIHcE=
 go.opentelemetry.io/collector/config/configauth v0.94.1 h1:VwmxDZRZVihvfwlP+BIM4DHVYqwx3oFUl6Fat1u3UnM=
@@ -178,8 +176,8 @@ go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.23.1 h1:p3A5+
 go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.23.1/go.mod h1:OClrnXUjBqQbInvjJFjYSnMxBSCXBF8r3b34WqjiIrQ=
 go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.23.1 h1:cfuy3bXmLJS7M1RZmAL6SuhGtKUp2KEsrm00OlAXkq4=
 go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.23.1/go.mod h1:22jr92C6KwlwItJmQzfixzQM3oyyuYLCfHiMY+rpsPU=
-go.opentelemetry.io/otel/exporters/prometheus v0.45.1 h1:R/bW3afad6q6VGU+MFYpnEdo0stEARMCdhWu6+JI6aI=
-go.opentelemetry.io/otel/exporters/prometheus v0.45.1/go.mod h1:wnHAfKRav5Dfp4iZhyWZ7SzQfT+rDZpEpYG7To+qJ1k=
+go.opentelemetry.io/otel/exporters/prometheus v0.45.2 h1:pe2Jqk1K18As0RCw7J08QhgXNqr+6npx0a5W4IgAFA8=
+go.opentelemetry.io/otel/exporters/prometheus v0.45.2/go.mod h1:B38pscHKI6bhFS44FDw0eFU3iqG3ASNIvY+fZgR5sAc=
 go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.23.0 h1:f4N/tfYchDXfM78Ng5KKO7OjrShVzww1g4oYxZ7tyMA=
 go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.23.0/go.mod h1:v1gipIZLj3qtxR1L1F7jF/WaPFA5ptuHk52+eq9SSRg=
 go.opentelemetry.io/otel/metric v1.23.1 h1:PQJmqJ9u2QaJLBOELl1cxIdPcpbwzbkjfEyelTl2rlo=

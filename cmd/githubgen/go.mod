@@ -19,3 +19,5 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 )
+
+replace go.opentelemetry.io/collector => /Users/tnajaryan/work/repos/opentelemetry-collector

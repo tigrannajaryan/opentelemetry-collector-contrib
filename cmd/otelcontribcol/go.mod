@@ -485,7 +485,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/knadh/koanf/maps v0.1.1 // indirect
 	github.com/knadh/koanf/providers/confmap v0.1.0 // indirect
-	github.com/knadh/koanf/v2 v2.0.2 // indirect
+	github.com/knadh/koanf/v2 v2.1.0 // indirect
 	github.com/kolo/xmlrpc v0.0.0-20220921171641-a4b6fa1dd06b // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
@@ -677,7 +677,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.23.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.23.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.23.0 // indirect
-	go.opentelemetry.io/otel/exporters/prometheus v0.45.1 // indirect
+	go.opentelemetry.io/otel/exporters/prometheus v0.45.2 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v0.45.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.23.0 // indirect
 	go.opentelemetry.io/otel/metric v1.23.1 // indirect
@@ -1190,3 +1190,13 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/extension/sola
 replace github.com/open-telemetry/opentelemetry-collector-contrib/receiver/namedpipereceiver => ../../receiver/namedpipereceiver
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/sqlquery => ../../internal/sqlquery
+
+replace go.opentelemetry.io/collector => /Users/tnajaryan/work/repos/opentelemetry-collector
+
+replace go.opentelemetry.io/collector/pdata => /Users/tnajaryan/work/repos/opentelemetry-collector/pdata
+
+replace go.opentelemetry.io/collector/pdata/pentity => /Users/tnajaryan/work/repos/opentelemetry-collector/pdata/pentity
+
+replace go.opentelemetry.io/collector/exporter/debugexporter => /Users/tnajaryan/work/repos/opentelemetry-collector/exporter/debugexporter
+
+replace go.opentelemetry.io/collector/exporter => /Users/tnajaryan/work/repos/opentelemetry-collector/exporter

@@ -4,6 +4,7 @@ package metadata
 
 import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.opentelemetry.io/collector/pdata/pentity"
 )
 
 // ResourceBuilder is a helper struct to build resources predefined in metadata.yaml.
@@ -11,13 +12,25 @@ import (
 type ResourceBuilder struct {
 	config ResourceAttributesConfig
 	res    pcommon.Resource
+	ent    pentity.EntityEvent
 }
 
 // NewResourceBuilder creates a new ResourceBuilder. This method should be called on the start of the application.
 func NewResourceBuilder(rac ResourceAttributesConfig) *ResourceBuilder {
+	res := pcommon.NewResource()
+	ent := pentity.NewEntityEvent()
+
+	// Set the producing entity type in the Resource.
+	res.SetEntityType("process")
+
+	// Prepare an EntityState event.
+	ent.SetEmptyEntityState()
+	ent.SetEntityType("process")
+
 	return &ResourceBuilder{
 		config: rac,
-		res:    pcommon.NewResource(),
+		res:    res,
+		ent:    ent,
 	}
 }
 
@@ -25,6 +38,8 @@ func NewResourceBuilder(rac ResourceAttributesConfig) *ResourceBuilder {
 func (rb *ResourceBuilder) SetProcessCommand(val string) {
 	if rb.config.ProcessCommand.Enabled {
 		rb.res.Attributes().PutStr("process.command", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutStr("process.command", val)
 	}
 }
 
@@ -32,6 +47,8 @@ func (rb *ResourceBuilder) SetProcessCommand(val string) {
 func (rb *ResourceBuilder) SetProcessCommandLine(val string) {
 	if rb.config.ProcessCommandLine.Enabled {
 		rb.res.Attributes().PutStr("process.command_line", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutStr("process.command_line", val)
 	}
 }
 
@@ -39,6 +56,8 @@ func (rb *ResourceBuilder) SetProcessCommandLine(val string) {
 func (rb *ResourceBuilder) SetProcessExecutableName(val string) {
 	if rb.config.ProcessExecutableName.Enabled {
 		rb.res.Attributes().PutStr("process.executable.name", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutStr("process.executable.name", val)
 	}
 }
 
@@ -46,6 +65,8 @@ func (rb *ResourceBuilder) SetProcessExecutableName(val string) {
 func (rb *ResourceBuilder) SetProcessExecutablePath(val string) {
 	if rb.config.ProcessExecutablePath.Enabled {
 		rb.res.Attributes().PutStr("process.executable.path", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutStr("process.executable.path", val)
 	}
 }
 
@@ -53,6 +74,8 @@ func (rb *ResourceBuilder) SetProcessExecutablePath(val string) {
 func (rb *ResourceBuilder) SetProcessOwner(val string) {
 	if rb.config.ProcessOwner.Enabled {
 		rb.res.Attributes().PutStr("process.owner", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutStr("process.owner", val)
 	}
 }
 
@@ -60,6 +83,8 @@ func (rb *ResourceBuilder) SetProcessOwner(val string) {
 func (rb *ResourceBuilder) SetProcessParentPid(val int64) {
 	if rb.config.ProcessParentPid.Enabled {
 		rb.res.Attributes().PutInt("process.parent_pid", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutInt("process.parent_pid", val)
 	}
 }
 
@@ -67,6 +92,9 @@ func (rb *ResourceBuilder) SetProcessParentPid(val int64) {
 func (rb *ResourceBuilder) SetProcessPid(val int64) {
 	if rb.config.ProcessPid.Enabled {
 		rb.res.Attributes().PutInt("process.pid", val)
+		// This is an identifying attribute of the entity.
+		rb.res.EntityId().PutInt("process.pid", val)
+		rb.ent.Id().PutInt("process.pid", val)
 	}
 }
 
