@@ -21,11 +21,11 @@ func NewResourceBuilder(rac ResourceAttributesConfig) *ResourceBuilder {
 	ent := pentity.NewEntityEvent()
 
 	// Set the producing entity type in the Resource.
-	res.SetEntityType("process")
+	res.SetEntityType("host")
 
 	// Prepare an EntityState event.
 	ent.SetEmptyEntityState()
-	ent.SetEntityType("process")
+	ent.SetEntityType("host")
 	return &ResourceBuilder{
 		config: rac,
 		res:    res,
@@ -91,9 +91,8 @@ func (rb *ResourceBuilder) SetProcessParentPid(val int64) {
 func (rb *ResourceBuilder) SetProcessPid(val int64) {
 	if rb.config.ProcessPid.Enabled {
 		rb.res.Attributes().PutInt("process.pid", val)
-		// This is an identifying attribute of the entity.
-		rb.res.EntityId().PutInt("process.pid", val)
-		rb.ent.Id().PutInt("process.pid", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutInt("process.pid", val)
 	}
 }
 

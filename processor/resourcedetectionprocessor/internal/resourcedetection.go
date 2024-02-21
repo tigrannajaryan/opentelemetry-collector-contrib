@@ -130,6 +130,9 @@ func (p *ResourceProvider) detectResource(ctx context.Context) {
 			p.logger.Warn("failed to detect resource", zap.Error(err))
 		} else {
 			mergedSchemaURL = MergeSchemaURL(mergedSchemaURL, schemaURL)
+			if res.EntityType() == "" {
+				res.SetEntityType(r.EntityType())
+			}
 			MergeResource(res, r, false)
 		}
 	}
@@ -140,6 +143,7 @@ func (p *ResourceProvider) detectResource(ctx context.Context) {
 	if len(droppedAttributes) > 0 {
 		p.logger.Info("dropped resource information", zap.Strings("resource keys", droppedAttributes))
 	}
+	p.logger.Info("detected entity", zap.Any("Type", res.EntityType()), zap.Any("Id", res.EntityId().AsRaw()))
 
 	p.detectedResource.resource = res
 	p.detectedResource.schemaURL = mergedSchemaURL
@@ -191,6 +195,20 @@ func MergeResource(to, from pcommon.Resource, overrideTo bool) {
 		}
 		return true
 	})
+
+	if to.EntityType() == from.EntityType() {
+		toId := to.EntityId()
+		from.EntityId().Range(func(k string, v pcommon.Value) bool {
+			if overrideTo {
+				v.CopyTo(toId.PutEmpty(k))
+			} else {
+				if _, found := toId.Get(k); !found {
+					v.CopyTo(toId.PutEmpty(k))
+				}
+			}
+			return true
+		})
+	}
 }
 
 func IsEmptyResource(res pcommon.Resource) bool {

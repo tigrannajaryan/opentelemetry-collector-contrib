@@ -10,7 +10,8 @@ resource_attributes:
   host.id:
     description: The host.id
     type: string
-    enabled: false
+    enabled: false # TODO: should this be enabled by default so that it is recorded as identifying attribute?
+    entity_identifying: true
   os.description:
     description: Human readable OS version information.
     type: string
@@ -55,3 +56,6 @@ resource_attributes:
     description: The host.cpu.cache.l2.size
     type: int
     enabled: false
+
+entity:
+  type: host

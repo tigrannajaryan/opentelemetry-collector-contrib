@@ -172,3 +172,7 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil 
 replace github.com/openshift/api v3.9.0+incompatible => github.com/openshift/api v0.0.0-20180801171038-322a19404e37
 
 replace go.opentelemetry.io/collector => /Users/tnajaryan/work/repos/opentelemetry-collector
+
+replace go.opentelemetry.io/collector/pdata => /Users/tnajaryan/work/repos/opentelemetry-collector/pdata
+
+replace go.opentelemetry.io/collector/pdata/pentity => /Users/tnajaryan/work/repos/opentelemetry-collector/pdata/pentity

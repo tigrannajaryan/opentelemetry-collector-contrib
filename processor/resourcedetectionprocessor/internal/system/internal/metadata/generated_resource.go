@@ -4,6 +4,7 @@ package metadata
 
 import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.opentelemetry.io/collector/pdata/pentity"
 )
 
 // ResourceBuilder is a helper struct to build resources predefined in metadata.yaml.
@@ -11,13 +12,24 @@ import (
 type ResourceBuilder struct {
 	config ResourceAttributesConfig
 	res    pcommon.Resource
+	ent    pentity.EntityEvent
 }
 
 // NewResourceBuilder creates a new ResourceBuilder. This method should be called on the start of the application.
 func NewResourceBuilder(rac ResourceAttributesConfig) *ResourceBuilder {
+	res := pcommon.NewResource()
+	ent := pentity.NewEntityEvent()
+
+	// Set the producing entity type in the Resource.
+	res.SetEntityType("host")
+
+	// Prepare an EntityState event.
+	ent.SetEmptyEntityState()
+	ent.SetEntityType("host")
 	return &ResourceBuilder{
 		config: rac,
-		res:    pcommon.NewResource(),
+		res:    res,
+		ent:    ent,
 	}
 }
 
@@ -25,6 +37,8 @@ func NewResourceBuilder(rac ResourceAttributesConfig) *ResourceBuilder {
 func (rb *ResourceBuilder) SetHostArch(val string) {
 	if rb.config.HostArch.Enabled {
 		rb.res.Attributes().PutStr("host.arch", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutStr("host.arch", val)
 	}
 }
 
@@ -32,6 +46,8 @@ func (rb *ResourceBuilder) SetHostArch(val string) {
 func (rb *ResourceBuilder) SetHostCPUCacheL2Size(val int64) {
 	if rb.config.HostCPUCacheL2Size.Enabled {
 		rb.res.Attributes().PutInt("host.cpu.cache.l2.size", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutInt("host.cpu.cache.l2.size", val)
 	}
 }
 
@@ -39,6 +55,8 @@ func (rb *ResourceBuilder) SetHostCPUCacheL2Size(val int64) {
 func (rb *ResourceBuilder) SetHostCPUFamily(val string) {
 	if rb.config.HostCPUFamily.Enabled {
 		rb.res.Attributes().PutStr("host.cpu.family", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutStr("host.cpu.family", val)
 	}
 }
 
@@ -46,6 +64,8 @@ func (rb *ResourceBuilder) SetHostCPUFamily(val string) {
 func (rb *ResourceBuilder) SetHostCPUModelID(val string) {
 	if rb.config.HostCPUModelID.Enabled {
 		rb.res.Attributes().PutStr("host.cpu.model.id", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutStr("host.cpu.model.id", val)
 	}
 }
 
@@ -53,6 +73,8 @@ func (rb *ResourceBuilder) SetHostCPUModelID(val string) {
 func (rb *ResourceBuilder) SetHostCPUModelName(val string) {
 	if rb.config.HostCPUModelName.Enabled {
 		rb.res.Attributes().PutStr("host.cpu.model.name", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutStr("host.cpu.model.name", val)
 	}
 }
 
@@ -60,6 +82,8 @@ func (rb *ResourceBuilder) SetHostCPUModelName(val string) {
 func (rb *ResourceBuilder) SetHostCPUStepping(val int64) {
 	if rb.config.HostCPUStepping.Enabled {
 		rb.res.Attributes().PutInt("host.cpu.stepping", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutInt("host.cpu.stepping", val)
 	}
 }
 
@@ -67,6 +91,8 @@ func (rb *ResourceBuilder) SetHostCPUStepping(val int64) {
 func (rb *ResourceBuilder) SetHostCPUVendorID(val string) {
 	if rb.config.HostCPUVendorID.Enabled {
 		rb.res.Attributes().PutStr("host.cpu.vendor.id", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutStr("host.cpu.vendor.id", val)
 	}
 }
 
@@ -74,6 +100,9 @@ func (rb *ResourceBuilder) SetHostCPUVendorID(val string) {
 func (rb *ResourceBuilder) SetHostID(val string) {
 	if rb.config.HostID.Enabled {
 		rb.res.Attributes().PutStr("host.id", val)
+		// This is an identifying attribute of the entity.
+		rb.res.EntityId().PutStr("host.id", val)
+		rb.ent.Id().PutStr("host.id", val)
 	}
 }
 
@@ -81,6 +110,8 @@ func (rb *ResourceBuilder) SetHostID(val string) {
 func (rb *ResourceBuilder) SetHostIP(val []any) {
 	if rb.config.HostIP.Enabled {
 		rb.res.Attributes().PutEmptySlice("host.ip").FromRaw(val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutEmptySlice("host.ip").FromRaw(val)
 	}
 }
 
@@ -88,6 +119,8 @@ func (rb *ResourceBuilder) SetHostIP(val []any) {
 func (rb *ResourceBuilder) SetHostMac(val []any) {
 	if rb.config.HostMac.Enabled {
 		rb.res.Attributes().PutEmptySlice("host.mac").FromRaw(val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutEmptySlice("host.mac").FromRaw(val)
 	}
 }
 
@@ -95,6 +128,8 @@ func (rb *ResourceBuilder) SetHostMac(val []any) {
 func (rb *ResourceBuilder) SetHostName(val string) {
 	if rb.config.HostName.Enabled {
 		rb.res.Attributes().PutStr("host.name", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutStr("host.name", val)
 	}
 }
 
@@ -102,6 +137,8 @@ func (rb *ResourceBuilder) SetHostName(val string) {
 func (rb *ResourceBuilder) SetOsDescription(val string) {
 	if rb.config.OsDescription.Enabled {
 		rb.res.Attributes().PutStr("os.description", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutStr("os.description", val)
 	}
 }
 
@@ -109,6 +146,8 @@ func (rb *ResourceBuilder) SetOsDescription(val string) {
 func (rb *ResourceBuilder) SetOsType(val string) {
 	if rb.config.OsType.Enabled {
 		rb.res.Attributes().PutStr("os.type", val)
+		// This is a non-identifying attribute of the entity.
+		rb.ent.EntityState().Attributes().PutStr("os.type", val)
 	}
 }
 
