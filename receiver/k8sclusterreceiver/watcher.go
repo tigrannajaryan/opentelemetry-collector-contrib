@@ -369,7 +369,8 @@ func (rw *resourceWatcher) syncMetadataUpdate(oldMetadata, newMetadata map[exper
 		entityEvents := metadata.GetEntityEvents(oldMetadata, newMetadata, timestamp)
 
 		// Convert entity events to log representation.
-		logs := entityEvents.ConvertAndMoveToLogs()
+		// TODO: use entity pipeline instead of log pipeline.
+		logs := metadata.ConvertAndMoveToLogs(entityEvents)
 
 		if logs.LogRecordCount() != 0 {
 			err := rw.entityLogConsumer.ConsumeLogs(context.Background(), logs)
