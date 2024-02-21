@@ -1153,3 +1153,5 @@ replace (
 replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/sqlquery => ./internal/sqlquery
 
 replace go.opentelemetry.io/collector => /Users/tnajaryan/work/repos/opentelemetry-collector
+
+replace go.opentelemetry.io/collector/consumer => /Users/tnajaryan/work/repos/opentelemetry-collector/consumer

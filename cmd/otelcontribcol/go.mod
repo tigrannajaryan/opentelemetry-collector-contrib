@@ -1200,3 +1200,9 @@ replace go.opentelemetry.io/collector/pdata/pentity => /Users/tnajaryan/work/rep
 replace go.opentelemetry.io/collector/exporter/debugexporter => /Users/tnajaryan/work/repos/opentelemetry-collector/exporter/debugexporter
 
 replace go.opentelemetry.io/collector/exporter => /Users/tnajaryan/work/repos/opentelemetry-collector/exporter
+
+replace go.opentelemetry.io/collector/processor => /Users/tnajaryan/work/repos/opentelemetry-collector/processor
+
+replace go.opentelemetry.io/collector/receiver => /Users/tnajaryan/work/repos/opentelemetry-collector/receiver
+
+replace go.opentelemetry.io/collector/consumer => /Users/tnajaryan/work/repos/opentelemetry-collector/consumer
