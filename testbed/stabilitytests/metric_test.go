@@ -68,7 +68,7 @@ func TestStressMetricsSTEF(t *testing.T) {
 	dataReceiver := datareceivers.NewStefDataReceiver(testutil.GetAvailablePort(t))
 	dataReceiver.SetExtraConfig(
 		map[string]interface{}{
-			"reconnect_period": "5s",
+			"reconnect_period": "5s", // stress with frequent reconnects
 		},
 	)
 	scenarios.Scenario10kItemsPerSecond(

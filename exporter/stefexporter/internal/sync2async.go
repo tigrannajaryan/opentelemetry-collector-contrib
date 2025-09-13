@@ -5,6 +5,7 @@ package internal // import "github.com/open-telemetry/opentelemetry-collector-co
 
 import (
 	"context"
+	"fmt"
 
 	"go.uber.org/zap"
 )
@@ -112,6 +113,8 @@ func (s *Sync2Async) DoSync(ctx context.Context, data any) error {
 	select {
 	case result := <-resultChan:
 		// Async operation completed. We can return the result.
+		s.logger.Debug("Async operation completed " + fmt.Sprintf("ID=%v", uint64(result.DataID)))
+
 		if result.DataID != dataID {
 			// Received ack on the wrong data item. This should normally not happen and indicates a bug somewhere.
 			s.logger.Error(

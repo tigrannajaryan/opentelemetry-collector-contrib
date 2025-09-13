@@ -5,6 +5,8 @@ package stefexporter // import "github.com/open-telemetry/opentelemetry-collecto
 
 import (
 	"context"
+	"fmt"
+	"sync/atomic"
 	"time"
 
 	stefpdatametrics "github.com/splunk/stef/go/pdata/metrics"
@@ -38,6 +40,8 @@ type stefExporter struct {
 
 	connMan    *internal.ConnManager
 	sync2Async *internal.Sync2Async
+
+	exportCount atomic.Uint64
 }
 
 const (
@@ -127,8 +131,77 @@ func (s *stefExporter) Shutdown(ctx context.Context) error {
 	return nil
 }
 
+func getBatchRange(md pmetric.Metrics) string {
+	resourceMetrics := md.ResourceMetrics()
+	if resourceMetrics.Len() == 0 {
+		return "unknown"
+	}
+	scopeMetrics := resourceMetrics.At(0).ScopeMetrics()
+	if scopeMetrics.Len() == 0 {
+		return "unknown"
+	}
+	metrics := scopeMetrics.At(0).Metrics()
+	if metrics.Len() == 0 {
+		return "unknown"
+	}
+	metric := metrics.At(0)
+	if metric.Type() != pmetric.MetricTypeGauge {
+		return "unknown"
+	}
+	dataPoints := metric.Gauge().DataPoints()
+	if dataPoints.Len() == 0 {
+		return "unknown"
+	}
+	startIndex, exists := dataPoints.At(0).Attributes().Get("batch_index")
+	if !exists {
+		return "unknown"
+	}
+
+	scopeMetrics = resourceMetrics.At(resourceMetrics.Len() - 1).ScopeMetrics()
+	if scopeMetrics.Len() == 0 {
+		return "unknown"
+	}
+	metrics = scopeMetrics.At(scopeMetrics.Len() - 1).Metrics()
+	if metrics.Len() == 0 {
+		return "unknown"
+	}
+	metric = metrics.At(metrics.Len() - 1)
+	if metric.Type() != pmetric.MetricTypeGauge {
+		return "unknown"
+	}
+	dataPoints = metric.Gauge().DataPoints()
+	if dataPoints.Len() == 0 {
+		return "unknown"
+	}
+	lastIndex, exists := dataPoints.At(dataPoints.Len() - 1).Attributes().Get("batch_index")
+	if !exists {
+		return "unknown"
+	}
+	return fmt.Sprintf("%s:%s", startIndex.Str(), lastIndex.Str())
+}
+
 func (s *stefExporter) exportMetrics(ctx context.Context, data pmetric.Metrics) error {
-	return s.sync2Async.DoSync(ctx, data)
+	exportCount := s.exportCount.Add(1)
+	batchRange := getBatchRange(data)
+
+	s.set.Logger.Debug(
+		fmt.Sprintf(
+			"exportMetrics start,  index=%d, range=%s", exportCount, batchRange,
+		),
+	)
+
+	err := s.sync2Async.DoSync(ctx, data)
+
+	var errStr string
+	if err != nil {
+		errStr = err.Error()
+	}
+	s.set.Logger.Debug(
+		fmt.Sprintf(
+			"exportMetrics finish, index=%d, range=%s, err=%s", exportCount, batchRange, errStr,
+		),
+	)
+	return err
 }
 
 // sendMetricsAsync is an async implementation of sending metric data.
@@ -138,17 +211,23 @@ func (s *stefExporter) sendMetricsAsync(
 	data any,
 	resultChan internal.ResultChan,
 ) (internal.DataID, error) {
+	md := data.(pmetric.Metrics)
+
+	batchRange := getBatchRange(md)
+
+	s.set.Logger.Debug("Preparing to send metrics async, range=" + batchRange)
+
 	// Acquire a connection to send the data over.
 	conn, err := s.connMan.Acquire(ctx)
 	if err != nil {
 		return 0, err
 	}
 
+	s.set.Logger.Debug("Connection acquired, range=" + batchRange)
+
 	// It must be a StefConn with a Writer.
 	stefConn := conn.Conn().(*internal.StefConn)
 	stefWriter := stefConn.Writer()
-
-	md := data.(pmetric.Metrics)
 
 	// Convert and write the data to the Writer.
 	converter := stefpdatametrics.OtlpToSTEFUnsorted{}
@@ -178,6 +257,12 @@ func (s *stefExporter) sendMetricsAsync(
 	// When the data we have just written is received by destination it will send us
 	// back an ack ID that numerically matches the last written record number.
 	expectedAckID := stefWriter.RecordCount()
+
+	s.set.Logger.Debug(
+		fmt.Sprintf(
+			"Metrics are written to connection. range=%s, expectedAckID=%v", batchRange, expectedAckID,
+		),
+	)
 
 	// Register to be notified via resultChan when the ack of the
 	// written record is received.
