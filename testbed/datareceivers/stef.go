@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/receiver"
 	"go.opentelemetry.io/collector/receiver/receivertest"
+	"gopkg.in/yaml.v3"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/stefreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/testbed/testbed"
@@ -20,6 +21,7 @@ import (
 type StefDataReceiver struct {
 	testbed.DataReceiverBase
 	receiver receiver.Metrics
+	extraCfg map[string]interface{}
 }
 
 // Ensure StefDataReceiver implements MetricDataSender.
@@ -29,6 +31,10 @@ var _ testbed.DataReceiver = (*StefDataReceiver)(nil)
 // specified port after Start is called.
 func NewStefDataReceiver(port int) *StefDataReceiver {
 	return &StefDataReceiver{DataReceiverBase: testbed.DataReceiverBase{Port: port}}
+}
+
+func (sr *StefDataReceiver) SetExtraConfig(extra map[string]interface{}) {
+	sr.extraCfg = extra
 }
 
 // Start the receiver.
@@ -53,6 +59,15 @@ func (sr *StefDataReceiver) Stop() error {
 
 // GenConfigYAMLStr returns exporter config for the agent.
 func (sr *StefDataReceiver) GenConfigYAMLStr() string {
+	var extraCfgStr []byte
+	if len(sr.extraCfg) > 0 {
+		var err error
+		extraCfgStr, err = yaml.Marshal(sr.extraCfg)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	// Note that this generates an exporter config for agent.
 	return fmt.Sprintf(
 		`
@@ -60,7 +75,8 @@ func (sr *StefDataReceiver) GenConfigYAMLStr() string {
       endpoint: "127.0.0.1:%d"
       tls:
         insecure: true
-`, sr.Port,
+      %s
+`, sr.Port, extraCfgStr,
 	)
 }
 

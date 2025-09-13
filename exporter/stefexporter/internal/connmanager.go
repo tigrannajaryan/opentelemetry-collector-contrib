@@ -390,6 +390,7 @@ func (c *ConnManager) durationLimiter() {
 
 			// Check if it is time to reconnect.
 			if c.clock.Since(conn.startTime) >= c.reconnectPeriod {
+				c.logger.Info("Will reconnect due to reconnect period")
 				if conn.needsFlush {
 					conn.needsFlush = false
 					// Flush it first.

@@ -41,8 +41,7 @@ type stefExporter struct {
 }
 
 const (
-	flushPeriod     = 100 * time.Millisecond
-	reconnectPeriod = 10 * time.Minute
+	flushPeriod = 100 * time.Millisecond
 )
 
 // TODO: make connection count configurable.
@@ -78,7 +77,7 @@ func (s *stefExporter) Start(ctx context.Context, host component.Host) error {
 		Creator:         connCreator,
 		TargetConnCount: connCount,
 		FlushPeriod:     flushPeriod,
-		ReconnectPeriod: reconnectPeriod,
+		ReconnectPeriod: s.cfg.ReconnectPeriod,
 	}
 	s.connMan, err = internal.NewConnManager(set)
 	if err != nil {

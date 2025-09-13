@@ -27,9 +27,10 @@ func NewFactory() exporter.Factory {
 
 func createDefaultConfig() component.Config {
 	return &Config{
-		TimeoutConfig: exporterhelper.TimeoutConfig{Timeout: 15 * time.Second},
-		QueueConfig:   exporterhelper.NewDefaultQueueConfig(),
-		RetryConfig:   configretry.NewDefaultBackOffConfig(),
+		TimeoutConfig:   exporterhelper.TimeoutConfig{Timeout: 15 * time.Second},
+		QueueConfig:     exporterhelper.NewDefaultQueueConfig(),
+		RetryConfig:     configretry.NewDefaultBackOffConfig(),
+		ReconnectPeriod: defReconnectPeriod,
 	}
 }
 

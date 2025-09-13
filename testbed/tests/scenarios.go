@@ -115,6 +115,9 @@ service:
       receivers: [%v]
       processors: [%s]
       exporters: [%v]
+  telemetry:
+    logs:
+      level: debug
 `
 
 	// Put corresponding elements into the config template to generate the final config.

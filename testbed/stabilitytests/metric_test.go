@@ -63,3 +63,26 @@ func TestStabilityMetricsSignalFx(t *testing.T) {
 		nil,
 	)
 }
+
+func TestStressMetricsSTEF(t *testing.T) {
+	dataReceiver := datareceivers.NewStefDataReceiver(testutil.GetAvailablePort(t))
+	dataReceiver.SetExtraConfig(
+		map[string]interface{}{
+			"reconnect_period": "5s",
+		},
+	)
+	scenarios.Scenario10kItemsPerSecond(
+		t,
+		datasenders.NewStefDataSender(testbed.DefaultHost, testutil.GetAvailablePort(t)),
+		dataReceiver,
+		testbed.ResourceSpec{
+			ExpectedMaxCPU:      60,
+			ExpectedMaxRAM:      150,
+			ResourceCheckPeriod: resourceCheckPeriod,
+		},
+		contribPerfResultsSummary,
+		nil,
+		nil,
+		nil,
+	)
+}
