@@ -299,6 +299,7 @@ func (c *ConnManager) DiscardAndClose(conn *ManagedConn) {
 
 func (c *ConnManager) flusher() {
 	defer func() {
+		c.logger.Debug("flusher exiting")
 		c.stoppedCond.Cond.L.Lock()
 		c.flusherStopped = true
 		c.stoppedCond.Cond.L.Unlock()
@@ -317,6 +318,7 @@ func (c *ConnManager) flusher() {
 	go func() {
 		defer cancel()
 		<-c.stopSignal
+		c.logger.Debug("flusher received stopSignal")
 	}()
 
 	for {
@@ -358,6 +360,7 @@ func (c *ConnManager) flusher() {
 // to avoid all connections reconnecting at the same c.clock.
 func (c *ConnManager) durationLimiter() {
 	defer func() {
+		c.logger.Debug("durationLimiter exiting")
 		c.stoppedCond.Cond.L.Lock()
 		c.durationLimiterStopped = true
 		c.stoppedCond.Cond.L.Unlock()
@@ -369,6 +372,7 @@ func (c *ConnManager) durationLimiter() {
 	go func() {
 		defer cancel()
 		<-c.stopSignal
+		c.logger.Debug("durationLimiter received stopSignal")
 	}()
 
 	// Each connection will be reconnected at approximately reconnectPeriod interval.
@@ -423,6 +427,7 @@ func (c *ConnManager) recreator() {
 	for {
 		select {
 		case <-c.stopSignal:
+			c.logger.Debug("recreator received stopSignal, exiting")
 			return
 
 		case conn := <-c.recreateConns:

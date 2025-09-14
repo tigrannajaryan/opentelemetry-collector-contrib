@@ -112,6 +112,8 @@ func (s *stefExporter) Start(ctx context.Context, host component.Host) error {
 }
 
 func (s *stefExporter) Shutdown(ctx context.Context) error {
+	s.set.Logger.Debug("Shutting down stef exporter")
+
 	if !s.started {
 		return nil
 	}
